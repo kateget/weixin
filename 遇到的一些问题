@@ -4,7 +4,8 @@
   解决方法：使用自带的图片转换方法将图片转换成base64的图片（只有base64的图片和网络上的图片能展示）
     例子：
 -----------------------------------------------------------------------------------------------------------------------------------------
-    loadImg: function (resF, nameList, flat, toLength) {
+   //图片下载 resF为文件列表，nameList为将要存入图片地址的数组，flat为当前下载的图片下标，toLength为文件列表长度
+   loadImg: function (resF, nameList, flat, toLength) {
       var mythis = this;
       wx.cloud.downloadFile({
         fileID: resF[flat].fileid,
