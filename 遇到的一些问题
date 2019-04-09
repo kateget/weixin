@@ -3,7 +3,7 @@
   2) 云开发存储的图片
   解决方法：使用自带的图片转换方法将图片转换成base64的图片（只有base64的图片和网络上的图片能展示）
     例子：
------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------
    //图片下载 resF为文件列表，nameList为将要存入图片地址的数组，flat为当前下载的图片下标，toLength为文件列表长度
    loadImg: function (resF, nameList, flat, toLength) {
       var mythis = this;
@@ -35,4 +35,98 @@
       })
 
     },
------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------
+2. this指向问题(由于部分涉及到请求的操作，在返回里面使用this会指向当前请求的方法，导致无法指向最外层的对象)
+  解决：
+    在外层定义一个mythis进行接收
+  例子：
+--------------------------------------------------------------------------------------------------------------------------------------    
+    // 上传图片
+  doUpload: function () {
+      var mythis = this;
+      // 选择图片
+      wx.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: function (res) {
+
+          var fileid = '';
+          wx.showLoading({
+            title: '上传中',
+          })
+
+          const filePath = res.tempFilePaths[0]
+          const temFilePath = res.tempFilePaths;
+          // 获取当前时间戳
+          var timestamp = Date.parse(new Date());
+          timestamp = timestamp / 1000;
+
+          var imgs = mythis.data.imglist;
+          console.log(imgs);
+          // 存储预览图片
+          for(var i = 0;i < temFilePath.length;i++){
+            imgs.push(temFilePath[i])
+            // 上传图片
+            // cloudPath.push('images/img_' + timestamp + temFilePath[i].match(/\.[^.]+?$/)[0])
+          }
+          mythis.setData({
+            imglist: imgs
+          })
+          console.log(imgs)
+
+
+          // 上传图片
+          const cloudPath = 'images/img_' + timestamp + filePath.match(/\.[^.]+?$/)[0]
+
+          console.log(cloudPath)
+          wx.cloud.uploadFile({
+            cloudPath,
+            filePath,
+            success: res => {
+              console.log('[上传文件] 成功：', res)
+
+              const db = wx.cloud.database();
+              db.collection('images').add({
+                data: {
+                  fileid: res.fileID,
+                },
+                success: res => {
+                  console.log('上传成功');
+
+                },
+                fail: err => {
+                  wx.showToast({
+                    icon: 'none',
+                    title: '新增记录失败'
+                  })
+                  console.error('[数据库] [新增记录] 失败：', err)
+                }
+              })
+
+              app.globalData.fileID = res.fileID
+              app.globalData.cloudPath = cloudPath
+              app.globalData.imagePath = filePath
+
+              wx.navigateTo({
+                url: '../storageConsole/storageConsole'
+              })
+            },
+            fail: e => {
+              console.error('[上传文件] 失败：', e)
+              wx.showToast({
+                icon: 'none',
+                title: '上传失败',
+              })
+            },
+            complete: () => {
+              wx.hideLoading()
+            }
+          })
+        },
+        fail: e => {
+          console.error(e)
+        }
+      })
+    }
+-------------------------------------------------------------------------------------------------------------------------------------    
