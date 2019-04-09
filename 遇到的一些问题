@@ -1,4 +1,37 @@
 1. 如下图片无法通过背景图片展示在真机上：
   1) 本地图片
   2) 云开发存储的图片
-  解决方法：
+  解决方法：使用自带的图片转换方法
+    例子：
+-------------------------------------------------------------------------------------------------------------------------------------------
+    loadImg: function (resF, nameList, flat, toLength) {
+      var mythis = this;
+      wx.cloud.downloadFile({
+        fileID: resF[flat].fileid,
+        success: res => {
+          wx.getFileSystemManager().readFile({
+            filePath: res.tempFilePath, //选择图片返回的相对路径
+            encoding: 'base64', //编码格式
+            success: res => { //成功的回调
+              nameList.push('data:image/png;base64,' + res.data);
+              if (flat + 1 < toLength) {
+                mythis.loadImg(resF, nameList, flat + 1, toLength);
+              } else {
+                mythis.setData({
+                  imglist: nameList
+                })
+              }
+
+            }
+          })
+
+        },
+        fail: res => {
+          console.log('获取失败');
+        },
+        complete: res => {
+        }
+      })
+
+    },
+-------------------------------------------------------------------------------------------------------------------------------------------
