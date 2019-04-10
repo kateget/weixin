@@ -139,3 +139,21 @@
   解决：
   https://www.jianshu.com/p/ae335d50b67d
    mode='widthFix'添加属性，保持横纵比撑满
+-------------------------------------------------------------------------------------------------------------------------------------    
+4. 删除图片云数据库的数据的时候，不能使用conllection.where().remove()函数，remove函数权限被关闭。
+  解决：
+  // 删除云存储图片
+  wx.cloud.deleteFile({
+    fileList: [nodeData.fileid],
+    success: function(res){
+      try{
+        const db = wx.cloud.database();
+        db.collection('images').doc(nodeData.id).remove();
+      }catch(e){
+        console.error(e)
+      }
+    }
+  });
+  delete fileid[nodeData.index];
+  delete imgurl[nodeData.index];
+  使用doc(数据库id).remove
